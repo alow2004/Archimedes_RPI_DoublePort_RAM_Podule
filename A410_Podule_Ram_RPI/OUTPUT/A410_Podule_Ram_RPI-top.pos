@@ -1,0 +1,39 @@
+### Module positions - created on 2023 September 26, Tuesday 17:12:50 ###
+### Printed by Pcbnew version (6.0.8-1)-1
+## Unit = mm, Angle = deg.
+## Side : top
+# Ref     Val                  Package                                           PosX       PosY       Rot  Side
+ARM1      Conn_02x02_Odd_Even  PinHeader_2x02_P2.54mm_Vertical               144.1500  -131.6940  -90.0000  top
+C2        100n                 C_1210_3225Metric_Pad1.33x2.70mm_HandSolder   137.6680  -131.6990  -90.0000  top
+C3        100n                 C_1210_3225Metric_Pad1.33x2.70mm_HandSolder   116.7130   -46.9900  180.0000  top
+C4        100n                 C_1210_3225Metric_Pad1.33x2.70mm_HandSolder   101.4345   -72.8980  180.0000  top
+C5        100n                 C_1210_3225Metric_Pad1.33x2.70mm_HandSolder   127.7620   -47.1170  180.0000  top
+C6        100n                 C_1210_3225Metric_Pad1.33x2.70mm_HandSolder   118.6180  -131.4450    0.0000  top
+C7        100n                 C_1210_3225Metric_Pad1.33x2.70mm_HandSolder   118.6180  -111.8870    0.0000  top
+C8        100n                 C_1210_3225Metric_Pad1.33x2.70mm_HandSolder   118.6180   -93.2180    0.0000  top
+C9        100n                 C_1210_3225Metric_Pad1.33x2.70mm_HandSolder   125.4760   -93.2180  180.0000  top
+C10       100n                 C_1210_3225Metric_Pad1.33x2.70mm_HandSolder   125.4760  -111.8870  180.0000  top
+C11       100n                 C_1210_3225Metric_Pad1.33x2.70mm_HandSolder   125.2220  -131.4450  180.0000  top
+C12       100n                 C_1210_3225Metric_Pad1.33x2.70mm_HandSolder    89.6620   -42.0370  180.0000  top
+CP1       10µ                 CP_Radial_D8.0mm_P5.00mm                      138.5673   -44.0690    0.0000  top
+CP2       22µ                 CP_Radial_D8.0mm_P5.00mm                      143.6267   -64.2620  180.0000  top
+HAT1      Conn_02x02_Odd_Even  PinHeader_2x02_P2.54mm_Vertical               144.1500  -125.2170  -90.0000  top
+INT1      INT                  PinHeader_2x02_P2.54mm_Vertical                83.4340   -88.7780   90.0000  top
+J1        Podule_connector     DIN41612_R_2x32_Male_Horizontal_THT            75.4380  -126.8730   90.0000  top
+J2        RPI_Connector        PinHeader_2x20_P2.54mm_Vertical               131.8210   -72.7760    0.0000  top
+Prgm1     Prgm                 PinHeader_1x02_P2.54mm_Vertical               117.3430  -135.6360   90.0000  top
+R2        1k                   R_1210_3225Metric_Pad1.30x2.65mm_HandSolder   129.4390  -124.7140    0.0000  top
+R3        3.9k                 R_1210_3225Metric_Pad1.30x2.65mm_HandSolder   135.1280  -124.7140    0.0000  top
+R4        3.9k                 R_1210_3225Metric_Pad1.30x2.65mm_HandSolder   125.2220  -135.0010    0.0000  top
+RN1       10K                  R_Array_SIP9                                   97.2820   -47.9910  -90.0000  top
+SW1       SW_DIP_x08           DIP-16_W7.62mm_Socket                         101.2290   -50.5360    0.0000  top
+U1        74LS245              DIP-20_W7.62mm_Socket                          85.5980   -45.4660    0.0000  top
+U2        74LS32               DIP-14_W7.62mm_Socket                         112.7860   -50.5410    0.0000  top
+U3        IDT7130              DIP-48_W15.24mm_Socket                         93.5940   -76.0830    0.0000  top
+U4        74LS04               DIP-14_W7.62mm_Socket                         124.2060   -50.5460    0.0000  top
+U5        TXS0108EPW           TSSOP-20_4.4x6.5mm_P0.65mm                    118.3640  -125.6030  180.0000  top
+U6        TXS0108EPW           TSSOP-20_4.4x6.5mm_P0.65mm                    118.3640  -106.1720  180.0000  top
+U7        TXS0108EPW           TSSOP-20_4.4x6.5mm_P0.65mm                    118.3640   -87.7570  180.0000  top
+U8        24C128               SOIC-8W_5.3x5.3mm_P1.27mm                     132.4610  -132.4610   90.0000  top
+U9        LM1117-3.3           SOT-223-3_TabPin2                             140.9700   -53.8480   90.0000  top
+## End
