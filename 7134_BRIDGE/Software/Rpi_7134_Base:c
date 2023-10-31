@@ -1,0 +1,641 @@
+/*************************************************************************************************
+* BRIDGE-PI IDT 7134 TEST PROGRAM,
+* Setup GPIO ports and test address, data & control lines
+* Author Alain Lowet - 23/10/2023
+*
+*************************************************************************************************/
+#include <stdio.h>
+#include <stdbool.h>
+#include<time.h>
+
+#include "swis.h"
+
+#define GPIO_ReadData 0x58F80
+#define GPIO_WriteData 0x58F81
+#define GPIO_WriteOE 0x58F83
+#define GPIO_WriteMode 0x58F90
+
+
+/* Functions declaration */
+void initGPIO(void);
+void configGPIO(void);
+void setDataGPIO(bool);
+void wait(int);
+void testControlLines(void);
+void testAddressLines(void);
+void testDataLines(void);
+void setAddress(int);
+void setData(int);
+void clearData(void);
+int readData(int);
+void testMemoryCell(void);
+void testMemoryRW(void);
+void fillMemoryArea(void);
+void readMemoryArea(void);
+void ctrlLineToggleTest(void);
+void dataLineToggleTest(void);
+void addressLineToggleTest(void);
+
+/*************************************************************************************************
+* GPIO pins defintion
+*************************************************************************************************/
+int io_addr[12] = {24,10,25,9,8,11,7,5,22,23,18,17}; 
+int io_data[8] = {21,26,20,19,16,13,6,12};
+int io_rw = 4;
+int io_oe = 27;
+int io_restart = 2;
+int io_ce = 3;
+
+clock_t pause;
+
+int main(void)
+{
+    configGPIO();
+    initGPIO();
+
+    int choice;
+    printf("\n Select test to perform \n");
+    printf("\n ------------------------------------------------------------------------------ \n");
+    printf("\n 1) TEST CONTROL LINES \n");
+    printf("\n 2) TEST ADDRESS LINES \n");
+    printf("\n 3) TEST DATA LINES \n");
+    printf("\n 4) TEST IDT MEMORY CELL \n");
+    printf("\n 5) TEST IDT MEMORY CELL R/W \n");
+    printf("\n 6) FILL MEMORY AREA \n");
+    printf("\n 7) READ MEMORY AREA \n");
+    printf("\n 8) CONTROL LINES TOGGLE TEST \n");
+    printf("\n 9) DATA LINES TOGGLE TEST \n");
+    printf("\n 0) ADDRESS LINES TOGGLE TEST \n");
+    printf("\n ------------------------------------------------------------------------------ \n");
+    printf("\n Please enter your selection \n");
+    scanf("%d",&choice);
+    printf("\n YOU SELECTED %d",choice);
+
+    switch (choice) 
+    { 
+        case 1: testControlLines();
+                     break;
+
+        case 2: testAddressLines();
+                     break;
+
+        case 3: testDataLines();
+                      break;
+
+        case 4: testMemoryCell();
+                      break;
+        
+        case 5: testMemoryRW();
+                      break;
+       
+        case 6: fillMemoryArea();
+                      break;
+
+        case 7: readMemoryArea();
+                      break;
+
+        case 8: ctrlLineToggleTest();
+                      break;
+
+        case 9: dataLineToggleTest();
+                      break;
+
+        case 0: addressLineToggleTest();
+                      break;
+
+        default: printf("\n NUMBER NOT IN SELECTABLE RANGE... \n");
+                      break;
+    }
+
+    main();
+}
+
+void configGPIO(void)
+{
+    printf ("Configure BCM pins as GPIO mode... \n");
+    _swix(GPIO_WriteMode, _INR(0,1),io_addr[0],0);  
+    _swix(GPIO_WriteMode, _INR(0,1),io_addr[1],0);
+    _swix(GPIO_WriteMode, _INR(0,1),io_addr[2],0);
+    _swix(GPIO_WriteMode, _INR(0,1),io_addr[3],0);
+    _swix(GPIO_WriteMode, _INR(0,1),io_addr[4],0);
+    _swix(GPIO_WriteMode, _INR(0,1),io_addr[5],0);
+    _swix(GPIO_WriteMode, _INR(0,1),io_addr[6],0);
+    _swix(GPIO_WriteMode, _INR(0,1),io_addr[7],0);
+    _swix(GPIO_WriteMode, _INR(0,1),io_addr[8],0);
+    _swix(GPIO_WriteMode, _INR(0,1),io_addr[9],0);
+    _swix(GPIO_WriteMode, _INR(0,1),io_addr[10],0);
+    _swix(GPIO_WriteMode, _INR(0,1),io_addr[11],0);
+   
+    _swix(GPIO_WriteMode, _INR(0,1),io_data[0],0);
+    _swix(GPIO_WriteMode, _INR(0,1),io_data[1],0);
+    _swix(GPIO_WriteMode, _INR(0,1),io_data[2],0);
+    _swix(GPIO_WriteMode, _INR(0,1),io_data[3],0);
+    _swix(GPIO_WriteMode, _INR(0,1),io_data[4],0);
+    _swix(GPIO_WriteMode, _INR(0,1),io_data[5],0);
+    _swix(GPIO_WriteMode, _INR(0,1),io_data[6],0);
+    _swix(GPIO_WriteMode, _INR(0,1),io_data[7],0);
+
+    _swix(GPIO_WriteMode, _INR(0,1),io_rw,0);
+    _swix(GPIO_WriteMode, _INR(0,1),io_oe,0);
+    _swix(GPIO_WriteMode, _INR(0,1),io_restart,0);
+    _swix(GPIO_WriteMode, _INR(0,1),io_ce,0);
+}
+
+
+
+void initGPIO(void) 
+{
+    printf ("Initializing Bridge GPIO ports configuration... \n");
+    /* Address lines configured as outputs */
+    _swix(GPIO_WriteOE, _INR(0,1),io_addr[0],0); //GPIO 24 = output
+    _swix(GPIO_WriteOE, _INR(0,1),io_addr[1],0); //GPIO 10 = output
+    _swix(GPIO_WriteOE, _INR(0,1),io_addr[2],0); //GPIO 25 = output
+    _swix(GPIO_WriteOE, _INR(0,1),io_addr[3],0); //GPIO 09 = output
+    _swix(GPIO_WriteOE, _INR(0,1),io_addr[4],0); //GPIO 08 = output
+    _swix(GPIO_WriteOE, _INR(0,1),io_addr[5],0); //GPIO 11 = output
+    _swix(GPIO_WriteOE, _INR(0,1),io_addr[6],0); //GPIO 07 = output
+    _swix(GPIO_WriteOE, _INR(0,1),io_addr[7],0); //GPIO 05 = output
+    _swix(GPIO_WriteOE, _INR(0,1),io_addr[8],0); //GPIO 22 = output
+    _swix(GPIO_WriteOE, _INR(0,1),io_addr[9],0); //GPIO 23 = output
+    _swix(GPIO_WriteOE, _INR(0,1),io_addr[10],0); //GPIO 18 = output
+    _swix(GPIO_WriteOE, _INR(0,1),io_addr[11],0); //GPIO 17 = output
+
+    /* Control lines configured as outputs */
+    _swix(GPIO_WriteOE, _INR(0,1),io_rw,0); //GPIO 04 = output
+    _swix(GPIO_WriteOE, _INR(0,1),io_oe,0); //GPIO 27 = output
+    _swix(GPIO_WriteOE, _INR(0,1),io_ce,0); //GPIO 03 = output
+    _swix(GPIO_WriteOE, _INR(0,1),io_restart,0); //GPIO 2 = output
+
+   setDataGPIO(0);  //Initialize Data port out
+
+    wait(2);
+    printf("\n");
+    printf ("Bridge GPIO ports configuration initialized \n");
+
+}
+
+void setDataGPIO(bool data_direction)
+{
+    _swix(GPIO_WriteOE, _INR(0,1),io_data[0],data_direction); //GPIO 12 direction
+    _swix(GPIO_WriteOE, _INR(0,1),io_data[1],data_direction); //GPIO 06 direction   
+    _swix(GPIO_WriteOE, _INR(0,1),io_data[2],data_direction); //GPIO 13 direction
+    _swix(GPIO_WriteOE, _INR(0,1),io_data[3],data_direction); //GPIO 16 direction
+    _swix(GPIO_WriteOE, _INR(0,1),io_data[4],data_direction); //GPIO 19 direction
+    _swix(GPIO_WriteOE, _INR(0,1),io_data[5],data_direction); //GPIO 20 direction
+    _swix(GPIO_WriteOE, _INR(0,1),io_data[6],data_direction); //GPIO 26 direction   
+    _swix(GPIO_WriteOE, _INR(0,1),io_data[7],data_direction); //GPIO 21 direction
+}
+
+void wait(int delay)
+{
+    pause=clock();
+    while(clock() - pause < CLOCKS_PER_SEC * delay)
+    {
+       /* Wait until delay is reached... */
+    }
+}
+
+void testControlLines(void) 
+{
+    char chk;
+    int result;
+
+    printf("\n CONTROL LINES TEST \n");
+    printf("\n ------------------------------------------------------------------------------ \n");
+    printf("\n THIS TEST WILL CHECK FOR RESTART, CE, OE AND RW GPIO ASSIGNED PINS \n");
+    printf("\n BSY AND INT PINS ARE CONFIGURED AS INPUTS \n");
+    printf("\n OE AND RW ARE CONFIGURED AS OUTPUTS \n");
+    printf("\n ------------------------------------------------------------------------------ \n");
+    printf("\n A. TEST OE GPIO OUTPUT LINE  \n");
+    printf("\n ------------------------------------------------------------------------------ \n");
+    scanf("%c",&chk);
+    _swix(0x58F81, _INR(0,1),io_oe,0);
+    printf("\n OE GPIO LINE SHOULD BE = 0 (LOW) \n");
+    printf("\n CHECK WITH MULTIMETER THAT GPIO OE PIN = 0 Volts \n");
+    printf("\n PRESS KEY TO CONTINUE... \n");
+    scanf("%c",&chk);
+    _swix(GPIO_WriteData, _INR(0,1),io_oe,1);
+    printf("\n OE GPIO LINE SHOULD BE = 1 (HIGH) \n");
+    printf("\n CHECK WITH MULTIMETER THAT GPIO OE PIN = 3.3 Volts \n");
+    printf("\n PRESS KEY TO CONTINUE... \n");
+    scanf("%c",&chk);
+    _swix(GPIO_WriteData, _INR(0,1),io_oe,0);
+    printf("\n OE GPIO LINE RESET TO 0 (LOW) \n");
+    printf("\n OE GPIO LINE TEST DONE \n");   
+    wait(1);
+    printf("\n PRESS KEY TO CONTINUE... \n");
+    scanf("%c",&chk);
+    printf("\n ------------------------------------------------------------------------------ \n");
+    printf("\n B. TEST CE GPIO OUTPUT LINE  \n");
+    printf("\n ------------------------------------------------------------------------------ \n");
+    //Enable OE line for level converter correct functionality
+    _swix(GPIO_WriteData, _INR(0,1),io_oe,1);  //Activate OE pins ( Active = 1 , Disabled = 0)
+    scanf("%c",&chk);
+    _swix(0x58F81, _INR(0,1),io_ce,0);
+    printf("\n CE GPIO LINE SHOULD BE = 0 (LOW) \n");
+    printf("\n CHECK WITH MULTIMETER THAT GPIO CE PIN = 0 Volts \n");
+    printf("\n PRESS KEY TO CONTINUE... \n");
+    scanf("%c",&chk);
+    _swix(GPIO_WriteData, _INR(0,1),io_ce,1);
+    printf("\n CE GPIO LINE SHOULD BE = 1 (HIGH) \n");
+    printf("\n CHECK WITH MULTIMETER THAT GPIO CE PIN = 3.3 Volts \n");
+    printf("\n PRESS KEY TO CONTINUE... \n");
+    scanf("%c",&chk);
+    _swix(GPIO_WriteData, _INR(0,1),io_ce,0);
+    printf("\n CE GPIO LINE RESET TO 0 (LOW) \n");
+    printf("\n CE GPIO LINE TEST DONE \n");   
+    wait(1);
+    printf("\n ------------------------------------------------------------------------------ \n");
+    printf("\n C. TEST RESTART GPIO OUTPUT LINE  \n");
+    printf("\n ------------------------------------------------------------------------------ \n");
+    //Enable OE line for level converter correct functionality
+    _swix(GPIO_WriteData, _INR(0,1),io_oe,1);  //Activate OE pins ( Active = 1 , Disabled = 0)
+    scanf("%c",&chk);
+    _swix(0x58F81, _INR(0,1),io_restart,0);
+    printf("\n RESTART GPIO LINE SHOULD BE = 0 (LOW) \n");
+    printf("\n CHECK WITH MULTIMETER THAT GPIO RESTART PIN = 0 Volts \n");
+    printf("\n PRESS KEY TO CONTINUE... \n");
+    scanf("%c",&chk);
+    _swix(GPIO_WriteData, _INR(0,1),io_restart,1);
+    printf("\n RESTART GPIO LINE SHOULD BE = 1 (HIGH) \n");
+    printf("\n CHECK WITH MULTIMETER THAT GPIO RESTART PIN = 3.3 Volts \n");
+    printf("\n PRESS KEY TO CONTINUE... \n");
+    scanf("%c",&chk);
+    _swix(GPIO_WriteData, _INR(0,1),io_restart,0);
+    printf("\n RESTART GPIO LINE RESET TO 0 (LOW) \n");
+    printf("\n RESTART GPIO LINE TEST DONE \n");   
+    wait(1); 
+    printf("\n ------------------------------------------------------------------------------ \n");
+    printf("\n D. TEST RW GPIO OUTPUT LINE  \n");
+    printf("\n ------------------------------------------------------------------------------ \n");
+    //Enable OE line for level converter correct functionality
+    _swix(GPIO_WriteData, _INR(0,1),io_oe,1);  //Activate OE pins ( Active = 1 , Disabled = 0)
+    scanf("%c",&chk);
+    _swix(GPIO_WriteData, _INR(0,1),io_rw,0);
+    printf("\n RW GPIO LINE SHOULD BE = 0 (LOW) \n");
+    printf("\n CHECK WITH MULTIMETER THAT GPIO RW PIN = 0 Volts \n");
+    printf("\n PRESS KEY TO CONTINUE... \n");
+    scanf("%c",&chk);
+   _swix(GPIO_WriteData, _INR(0,1),io_rw,1);
+    printf("\n RW GPIO LINE SHOULD BE = 1 (HIGH) \n");
+    printf("\n CHECK WITH MULTIMETER THAT GPIO RW PIN = 3.3 Volts \n");
+    printf("\n PRESS KEY TO CONTINUE... \n");
+    scanf("%c",&chk);
+    _swix(GPIO_WriteData, _INR(0,1),io_rw,0);
+    printf("\n RW GPIO LINE RESET TO 0 (LOW) \n");
+    printf("\n RW GPIO LINE TEST DONE \n");       
+    wait(1); 
+    printf("\n ------------------------------------------------------------------------------ \n");
+    printf("\n D. TEST RESTART GPIO INPUT LINE  \n");
+    printf("\n ------------------------------------------------------------------------------ \n");
+    printf("\n PLEASE INSTALL A LINK BETWEEN /RESTART GPIO PIN AND GND \n");
+    printf("\n WHEN LINK INSTALLED  \n");
+    printf("\n PRESS KEY TO CONTINUE... \n");
+    //Enable OE line for level converter correct functionality
+    _swix(GPIO_WriteData, _INR(0,1),io_oe,1);  //Activate OE pins ( Active = 1 , Disabled = 0)
+    scanf("%c",&chk);
+    /* Control lines configured as inputs */
+    _swix(GPIO_WriteOE, _INR(0,1),io_restart,1); //GPIO 2 = input
+    _swix(GPIO_ReadData, _IN(0)|_OUT(0),io_restart,&result);
+    if(result != 0) 
+    {
+        printf("\n WARNING, GPIO_RESTART TEST FAILURE! \n");
+    }
+    printf("\n PLEASE INSTALL A LINK BETWEEN /RESTARTGPIO PIN AND 3.3 volts \n");
+    printf("\n WHEN LINK INSTALLED  \n");
+    printf("\n PRESS KEY TO CONTINUE... \n");
+    scanf("%c",&chk);
+    _swix(GPIO_ReadData, _IN(0)|_OUT(0),io_restart,&result);
+    if(result != 1) 
+    {
+        printf("\n WARNING, GPIO_RESTART TEST FAILURE! \n");
+    } 
+}
+
+void testAddressLines(void) 
+{
+    int i;
+    _swix(GPIO_WriteData, _INR(0,1),io_oe,1);  //Activate OE pins ( Active = 1 , Disabled = 0)
+    _swix(GPIO_WriteData, _INR(0,1),io_rw,0);  //Set RW to write mode  (Read = 1, Write = 0)
+    for (i=0;i<=4095;i++)
+    {
+        setAddress(i);
+        printf("\n . \n");
+        // wait(1);
+    }
+
+    _swix(GPIO_WriteData, _INR(0,1),io_oe,0);  //Activate OE pins (Active = 1, Disabled = 0)
+    _swix(GPIO_WriteData, _INR(0,1),io_rw,1);  //Set RW to read mode  (Read = 1, Write = 0)
+}
+
+void testDataLines(void) 
+{
+    int i;
+    _swix(GPIO_WriteData, _INR(0,1),io_oe,1);  //Activate OE pins ( Active = 1 , Disabled = 0)
+    _swix(GPIO_WriteData, _INR(0,1),io_rw,0);  //Set RW to write mode  (Read = 1, Write = 0)
+    for (i=0;i<=255;i++)
+    {
+        setData(i);
+        printf("\n . \n");
+        // wait(1);
+    }
+   _swix(GPIO_WriteData, _INR(0,1),io_oe,0);  //Activate OE pins (Active = 1, Disabled = 0)
+   _swix(GPIO_WriteData, _INR(0,1),io_rw,1);  //Set RW to read mode  (Read = 1, Write = 0)
+}
+
+void setAddress(int value)
+{
+  int address[12];
+  int i;
+
+    if (value > 4095) {
+        printf("ERROR!, Address out of range... \n\n");
+        value = 0;
+    }
+      
+    for (i=11; i>=0; i--) {
+        address[i] = ((value & (1 << i)) !=0) ? 1:0 ;
+        _swix(GPIO_WriteData, _INR(0,1),io_addr[i],address[i]);
+    }
+}
+
+void setData(int value)
+{
+  int data[8];
+  int i;
+    
+    if (value > 255) {
+        printf("ERROR!, Data out of range... \n\n");
+        value = 0;
+    }
+      
+    for (i=7; i>=0; i--) {
+        data[i] = ((value & (1 << i)) !=0) ? 1:0 ;
+        _swix(GPIO_WriteData, _INR(0,1),io_data[i],data[i]);
+    }
+}
+
+void clearData(void) {
+    setData(0);
+}
+
+int readData(int addr) {
+ 
+  int io_value[8];
+  int data;
+  int i;
+
+    setAddress(addr);
+    for (i=0;i<=7;i++) {
+        _swix(GPIO_ReadData, _IN(0)|_OUT(0),io_data[i],&io_value[i]);
+        //printf("%d \n\n",io_value[i]);
+    }
+
+    data= (io_value[7]*128)+(io_value[6]*64)+(io_value[5]*32)+(io_value[4]*16)+(io_value[3]*8)+(io_value[2]*4)+(io_value[1]*2)+io_value[0];
+
+    return data;
+}
+
+void testMemoryCell(void)
+{
+
+    int value;
+    int choice = 0;
+
+        printf("\n Please select a data value to store \n");
+        scanf("%d",&choice);
+        //-----------------------------------------------------------------------------------------------------------------------------
+        // A. Prior to any operation Enable level converters
+        _swix(GPIO_WriteData, _INR(0,1),io_oe,1);  //Activate OE pins ( Active = 1 , Disabled = 0)
+        //-----------------------------------------------------------------------------------------------------------------------------
+        //1. Set address
+        setAddress(0);
+        //2. Set data port mode to input
+        setDataGPIO(1);
+        //3. Set read/write control signal to write mode
+        _swix(GPIO_WriteData, _INR(0,1),io_rw,0);  //Set RW to write mode  (Read = 1, Write = 0)
+        //4. Enable Double Port Memory Chip Enable (active low!)
+        _swix(GPIO_WriteData, _INR(0,1),io_ce,0);  //Activate CE pins ( Active = 0 , Disabled = 1)
+        //5. Write data to double port ram
+        setData(choice);
+        //6. Disable Double Port Memory Chip Enable (active low!)
+        _swix(GPIO_WriteData, _INR(0,1),io_ce,1);  //Activate CE pins ( Active = 0 , Disabled = 1)
+        //7. Set read/write control signal to read mode
+        _swix(GPIO_WriteData, _INR(0,1),io_rw,1);  //Set RW to write mode  (Read = 1, Write = 0)
+
+        clearData();
+      
+       printf("PAUSE 3 sec before reading data back and display \n\n");
+       wait(3);
+
+       //1. Set data port mode to output
+        setDataGPIO(0);
+       //2. Set read/write control signal to read mode
+        _swix(GPIO_WriteData, _INR(0,1),io_rw,1);  //Set RW to write mode  (Read = 1, Write = 0)
+       //3. Enable Double Port Memory Chip Enable (active low!)
+        _swix(GPIO_WriteData, _INR(0,1),io_ce,0);  //Activate CE pins ( Active = 0 , Disabled = 1)
+       //4. Read data from double port ram
+        value = readData(0);
+       //5. Disable Double Port Memory Chip Enable (active low!)
+        _swix(GPIO_WriteData, _INR(0,1),io_ce,1);  //Activate CE pins ( Active = 0 , Disabled = 1)
+
+        printf("%d \n \n",value);
+      
+}
+
+void testMemoryRW(void)
+{
+     printf("\n Store loop counter in memory \n");
+
+    int addr = 0;
+    int dataWR = 0;
+    int dataRD = 0;
+
+    //-----------------------------------------------------------------------------------------------------------------------------
+    // A. Prior to any operation Enable level converters
+    _swix(GPIO_WriteData, _INR(0,1),io_oe,1);  //Activate OE pins ( Active = 1 , Disabled = 0)
+    //-----------------------------------------------------------------------------------------------------------------------------
+
+     for (addr=0;addr<=4095;addr++)
+    {
+        //1. Set address
+        setAddress(addr);
+        //2. Set data port mode to input
+        setDataGPIO(1);
+        //3. Set read/write control signal to write mode
+        _swix(GPIO_WriteData, _INR(0,1),io_rw,0);  //Set RW to write mode  (Read = 1, Write = 0)
+        //4. Enable Double Port Memory Chip Enable (active low!)
+        _swix(GPIO_WriteData, _INR(0,1),io_ce,0);  //Activate CE pins ( Active = 0 , Disabled = 1)
+        //5. Write data to double port ram
+        setData(dataWR);
+        //6. Disable Double Port Memory Chip Enable (active low!)
+        _swix(GPIO_WriteData, _INR(0,1),io_ce,1);  //Activate CE pins ( Active = 0 , Disabled = 1)
+        //7. Set read/write control signal to read mode
+        _swix(GPIO_WriteData, _INR(0,1),io_rw,1);  //Set RW to write mode  (Read = 1, Write = 0) 
+ 
+        printf("WR:   %d     ",dataWR);
+
+      // wait(1);
+
+        //1. Set data port mode to output
+        setDataGPIO(0);
+       //2. Set read/write control signal to read mode
+        _swix(GPIO_WriteData, _INR(0,1),io_rw,1);  //Set RW to write mode  (Read = 1, Write = 0)
+       //3. Enable Double Port Memory Chip Enable (active low!)
+        _swix(GPIO_WriteData, _INR(0,1),io_ce,0);  //Activate CE pins ( Active = 0 , Disabled = 1)
+       //4. Read data from double port ram
+        dataRD = readData(addr);
+       //5. Disable Double Port Memory Chip Enable (active low!)
+        _swix(GPIO_WriteData, _INR(0,1),io_ce,1);  //Activate CE pins ( Active = 0 , Disabled = 1)
+        
+        printf("RD > %d ADDRESS: %d  \n\n",dataRD,addr);
+
+        if(dataWR <=255) {
+            dataWR++;
+        } else {
+            dataWR = 0;
+        }
+    }
+}
+
+void fillMemoryArea(void) {
+    
+    int addr = 0;
+    int value = 0;
+    int begin = 0;
+    int end = 0;
+
+        printf("\n Select a data value to store (between 0 and 255) \n");
+        scanf("%d",&value);
+        printf("\n Select a starting address value to write between 0 and 4095) \n");
+        scanf("%d",&begin);
+        printf("\n Select a ending address value to write between 0 and 4095) \n");
+        scanf("%d",&end);
+
+        //-----------------------------------------------------------------------------------------------------------------------------
+        // A. Prior to any operation Enable level converters
+        _swix(GPIO_WriteData, _INR(0,1),io_oe,1);  //Activate OE pins ( Active = 1 , Disabled = 0)
+        //-----------------------------------------------------------------------------------------------------------------------------
+
+        for (addr=begin;addr <=end; addr++) {
+            //1. Set address
+            setAddress(addr);
+            //2. Set data port mode to input
+            setDataGPIO(1);
+            //3. Set read/write control signal to write mode
+            _swix(GPIO_WriteData, _INR(0,1),io_rw,0);  //Set RW to write mode  (Read = 1, Write = 0)
+            //4. Enable Double Port Memory Chip Enable (active low!)
+            _swix(GPIO_WriteData, _INR(0,1),io_ce,0);  //Activate CE pins ( Active = 0 , Disabled = 1)
+            //5. Write data to double port ram
+            setData(value);
+            //6. Disable Double Port Memory Chip Enable (active low!)
+            _swix(GPIO_WriteData, _INR(0,1),io_ce,1);  //Activate CE pins ( Active = 0 , Disabled = 1)
+            //7. Set read/write control signal to read mode
+            _swix(GPIO_WriteData, _INR(0,1),io_rw,1);  //Set RW to write mode  (Read = 1, Write = 0) 
+ 
+            printf("ADDRESS:   %d - VALUE:  %d    \n\n",addr, value);
+
+        }
+}
+
+void readMemoryArea(void) {
+
+    int addr = 0;
+    int value =0;
+    int begin = 0;
+    int end = 0;
+
+        printf("\n Select a starting address value to read between 0 and 4095) \n");
+        scanf("%d",&begin);
+        printf("\n Select a ending address value to read between 0 and 4095) \n");
+        scanf("%d",&end);
+
+        for (addr=begin;addr <=end; addr++) {
+
+            //1. Set data port mode to output
+            setDataGPIO(0);
+            //2. Set read/write control signal to read mode
+            _swix(GPIO_WriteData, _INR(0,1),io_rw,1);  //Set RW to write mode  (Read = 1, Write = 0)
+            //3. Enable Double Port Memory Chip Enable (active low!)
+            _swix(GPIO_WriteData, _INR(0,1),io_ce,0);  //Activate CE pins ( Active = 0 , Disabled = 1)
+            //4. Read data from double port ram
+            value = readData(addr);
+            //5. Disable Double Port Memory Chip Enable (active low!)
+            _swix(GPIO_WriteData, _INR(0,1),io_ce,1);  //Activate CE pins ( Active = 0 , Disabled = 1)
+        
+            printf("ADDRESS:   %d - VALUE:  %d    \n\n",addr, value);
+
+        }
+}
+
+void ctrlLineToggleTest(void) {
+
+    int interval = 0;
+   
+    printf("\n Select toggling time interval in seconds \n");
+    scanf("%d",&interval);
+
+   //To test other control lines, OE needs to be activated! (Level shifters enable...)
+    _swix(GPIO_WriteData, _INR(0,1),io_oe,1);  //Activate OE pins ( Active = 1 , Disabled = 0)
+
+    while(true) {
+        _swix(GPIO_WriteData, _INR(0,1),io_ce,1); 
+        _swix(GPIO_WriteData, _INR(0,1),io_rw,1); 
+        _swix(GPIO_WriteData, _INR(0,1),io_restart,1); 
+       printf("1");
+        wait(interval);
+        _swix(GPIO_WriteData, _INR(0,1),io_ce,0); 
+        _swix(GPIO_WriteData, _INR(0,1),io_rw,0); 
+        _swix(GPIO_WriteData, _INR(0,1),io_restart,0); 
+        printf("0");
+        wait(interval);
+    }
+}
+
+void dataLineToggleTest(void) {
+ int interval = 0;
+   
+    printf("\n Select toggling time interval in seconds \n");
+    scanf("%d",&interval);
+    //To test other control lines, OE needs to be activated! (Level shifters enable...)
+    _swix(GPIO_WriteData, _INR(0,1),io_oe,1);  //Activate OE pins ( Active = 1 , Disabled = 0)
+
+    setDataGPIO(0);
+    while(true) {
+        setData(0);
+        printf("0");
+        wait(interval);
+        setData(255);
+        printf("1");
+        wait(interval);
+    }
+}
+
+void addressLineToggleTest(void){
+ int interval = 0;
+   
+    printf("\n Select toggling time interval in seconds \n");
+    scanf("%d",&interval);
+    //To test other control lines, OE needs to be activated! (Level shifters enable...)
+    _swix(GPIO_WriteData, _INR(0,1),io_oe,1);  //Activate OE pins ( Active = 1 , Disabled = 0)
+
+    while(true) {
+        setAddress(0);
+        printf("0");
+        wait(interval);
+        setAddress(4095);
+        printf("1");
+        wait(interval);
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
